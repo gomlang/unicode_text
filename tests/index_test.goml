@@ -1,0 +1,60 @@
+package tests;
+
+use ecosystem::unicode_text as unicode;
+use std::testing;
+
+#[test]
+fn grapheme_index_maps_unicode_ranges_and_exact_boundaries() -> () {
+    let text = "a🇨🇳é👩🏽‍💻";
+    let index = unicode::GraphemeIndex::new(text);
+    let expected = Vec::from_array([0, 1, 9, 12, 27]);
+    testing::assert_eq(index.len(), 4);
+    testing::assert_eq(index.text(), text);
+    testing::assert(index.boundaries() == expected);
+    for at in 0..expected.len() {
+        testing::assert(index.boundary(at) == Option::Some(expected[at]));
+        testing::assert(index.index_of_boundary(expected[at]) == Option::Some(at));
+    }
+    for offset in 0..=text.byte_len() {
+        testing::assert_eq(index.index_of_boundary(offset).is_some(), expected.contains(offset));
+    }
+    testing::assert(index.slice(1, 3) == Option::Some("🇨🇳é"));
+    testing::assert(index.slice(4, 4) == Option::Some(""));
+    testing::assert_eq(testing::expect_some(index.get(3), "emoji").text, "👩🏽‍💻");
+    let copy = index.boundaries();
+    copy[1] = 999;
+    testing::assert(index.boundary(1) == Option::Some(1));
+    for bad in[-1, 5, 9223372036854775807] {
+        testing::assert(index.boundary(bad).is_none());
+        testing::assert(index.get(bad).is_none());
+        testing::assert(index.slice(0, bad).is_none());
+    }
+    testing::assert(index.get(4).is_none());
+    testing::assert(index.slice(3, 2).is_none());
+    testing::assert(index.index_of_boundary(-1).is_none());
+    testing::assert(index.index_of_boundary(28).is_none());
+}
+
+#[test]
+fn empty_and_bounded_indexes_preserve_snapshot_rules() -> () {
+    let empty = testing::expect_ok(unicode::GraphemeIndex::with_limit("", 0), "empty");
+    testing::assert(empty.is_empty());
+    testing::assert(empty.boundary(0) == Option::Some(0));
+    testing::assert(empty.index_of_boundary(0) == Option::Some(0));
+    testing::assert(empty.slice(0, 0) == Option::Some(""));
+    testing::assert(empty.get(0).is_none());
+    testing::assert(unicode::GraphemeIndex::with_limit("中", 2).is_err());
+    testing::assert_ok(unicode::GraphemeIndex::with_limit("中", 3));
+    testing::assert(unicode::GraphemeIndex::with_limit("", -1).is_err());
+    for text in["\r\n", "क्ष", "각", "🇦🇧🇨", "\u0301", "a\n\n"] {
+        let index = unicode::GraphemeIndex::new(text);
+        let segments = unicode::graphemes(text);
+        testing::assert_eq(index.len(), segments.len());
+        for i in 0..segments.len() {
+            let actual = testing::expect_some(index.get(i), "segment");
+            testing::assert_eq(actual.text, segments[i].text);
+            testing::assert_eq(actual.start, segments[i].start);
+            testing::assert_eq(actual.end, segments[i].end);
+        }
+    }
+}
