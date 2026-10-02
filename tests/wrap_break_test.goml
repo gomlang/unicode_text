@@ -1,0 +1,53 @@
+package tests;
+
+use ecosystem::unicode_text as unicode;
+use std::testing;
+
+#[test]
+fn oversized_cluster_preserves_hard_break_after_trimmed_spaces() -> () {
+    for separator in["\n", "\r\n", "\r", "\u000b", "\u000c", "\u0085", "\u2028", "\u2029"] {
+        for cluster in["界", "👩🏽‍💻"] {
+            let source = cluster + "   " + separator;
+            let lines = testing::expect_ok(
+                unicode::wrap_configured(source, unicode::WrapOptions::new(1)),
+                "wrap",
+            );
+            testing::assert_eq(lines.len(), 2);
+            testing::assert_eq(lines[0].text, cluster);
+            testing::assert_eq(lines[0].start, 0);
+            testing::assert_eq(lines[0].end, cluster.byte_len());
+            testing::assert_eq(lines[0].width, 2);
+            testing::assert(lines[0].hard_break);
+            testing::assert_eq(lines[1].text, "");
+            testing::assert_eq(lines[1].start, source.byte_len());
+            testing::assert(!lines[1].hard_break);
+        }
+    }
+}
+
+#[test]
+fn emergency_break_only_marks_last_line_and_respects_preserved_spaces() -> () {
+    let lines = testing::expect_ok(
+        unicode::wrap_configured("界 界   \n", unicode::WrapOptions::new(1)),
+        "wrap",
+    );
+    testing::assert_eq(lines.len(), 3);
+    testing::assert(!lines[0].hard_break);
+    testing::assert(lines[1].hard_break);
+    let preserved = testing::expect_ok(
+        unicode::wrap_configured(
+            "界 \n",
+            unicode::WrapOptions { trim_spaces: false, ..unicode::WrapOptions::new(1) },
+        ),
+        "preserved",
+    );
+    testing::assert_eq(preserved.len(), 3);
+    testing::assert(!preserved[0].hard_break);
+    testing::assert(preserved[1].hard_break);
+    let eof = testing::expect_ok(
+        unicode::wrap_configured("界   ", unicode::WrapOptions::new(1)),
+        "eof",
+    );
+    testing::assert_eq(eof.len(), 1);
+    testing::assert(!eof[0].hard_break);
+}

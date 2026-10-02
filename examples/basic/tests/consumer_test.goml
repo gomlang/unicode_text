@@ -33,3 +33,13 @@ fn imported_policies_limits_and_line_breaks() -> () {
     testing::assert_eq(opportunities.len(), 2);
     testing::assert_eq(opportunities[0].offset, 6);
 }
+
+#[test]
+fn public_wrap_marks_separator_after_oversized_cluster() -> () {
+    let lines = testing::expect_ok(
+        unicode::wrap_configured("界 \n", unicode::WrapOptions::new(1)),
+        "wrap",
+    );
+    testing::assert(lines[0].hard_break);
+    testing::assert_eq(lines.len(), 2);
+}
