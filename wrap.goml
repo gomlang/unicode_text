@@ -147,22 +147,23 @@ pub fn wrap_configured(value: string, options: WrapOptions) -> Result[Vec[Wrappe
                     end
                 }
             };
+            let mut next_start = finish;
+            if options.trim_spaces {
+                while next_start < end && clusters[next_start].text == " " {
+                    next_start += 1;
+                }
+            }
             append_line(
                 value,
                 clusters,
                 start,
                 finish,
-                hard && finish == end,
+                hard && next_start == end,
                 options,
                 result,
                 output_bytes,
             )?;
-            start = finish;
-            if options.trim_spaces {
-                while start < end && clusters[start].text == " " {
-                    start += 1;
-                }
-            }
+            start = next_start;
         }
         if !hard {
             break;
