@@ -1,0 +1,85 @@
+package unicode_text;
+
+pub struct GraphemeIndex {
+    value: string,
+    offsets: Vec[isize],
+}
+
+impl GraphemeIndex {
+    pub fn new(value: string) -> GraphemeIndex {
+        GraphemeIndex { value, offsets: grapheme_boundaries(value) }
+    }
+
+    pub fn with_limit(value: string, max_input_bytes: isize) -> Result[GraphemeIndex, Error] {
+        if max_input_bytes < 0 {
+            return Result::Err(
+                Error::InvalidOptions("grapheme index byte limit must be nonnegative"),
+            );
+        }
+        if value.byte_len() > max_input_bytes {
+            return Result::Err(Error::InputLimit);
+        }
+        Result::Ok(GraphemeIndex::new(value))
+    }
+
+    pub fn text(self: GraphemeIndex) -> string {
+        self.value
+    }
+
+    pub fn len(self: GraphemeIndex) -> isize {
+        self.offsets.len() - 1
+    }
+
+    pub fn is_empty(self: GraphemeIndex) -> bool {
+        self.len() == 0
+    }
+
+    pub fn boundaries(self: GraphemeIndex) -> Vec[isize] {
+        self.offsets.copy()
+    }
+
+    pub fn boundary(self: GraphemeIndex, index: isize) -> Option[isize] {
+        if index < 0 || index >= self.offsets.len() {
+            Option::None
+        } else {
+            Option::Some(self.offsets[index])
+        }
+    }
+
+    pub fn index_of_boundary(self: GraphemeIndex, offset: isize) -> Option[isize] {
+        if offset < 0 || offset > self.value.byte_len() {
+            return Option::None;
+        }
+        let mut low = 0;
+        let mut high = self.offsets.len();
+        while low < high {
+            let mid = low + (high - low) / 2;
+            if self.offsets[mid] < offset {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        if low < self.offsets.len() && self.offsets[low] == offset {
+            Option::Some(low)
+        } else {
+            Option::None
+        }
+    }
+
+    pub fn get(self: GraphemeIndex, index: isize) -> Option[Grapheme] {
+        if index < 0 || index >= self.len() {
+            return Option::None;
+        }
+        let start = self.offsets[index];
+        let end = self.offsets[index + 1];
+        Option::Some(Grapheme { text: self.value.byte_slice(start, end), start, end })
+    }
+
+    pub fn slice(self: GraphemeIndex, start: isize, end: isize) -> Option[string] {
+        if start < 0 || end < start || end > self.len() {
+            return Option::None;
+        }
+        Option::Some(self.value.byte_slice(self.offsets[start], self.offsets[end]))
+    }
+}

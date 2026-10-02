@@ -103,3 +103,21 @@ goml verify --timeout 300s
 ```
 
 `goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test unicode_text)` also retains the library-specific smoke and compatibility checks.
+
+## Reusable grapheme positions
+
+`GraphemeIndex::new(text)` runs the pinned segmentation once and retains immutable
+text plus byte boundaries. `with_limit(text, max_input_bytes)` rejects oversized
+input before segmentation; negative limits are invalid. `len()` counts clusters,
+`boundary(index)` accepts positions from zero through `len()`, and `get(index)`
+returns the corresponding `Grapheme`. `slice(start, end)` takes an exclusive
+cluster range, including empty ranges and the EOF position. Invalid indices return
+`None`. `index_of_boundary(byte_offset)` returns the exact cluster boundary index,
+including EOF, and rejects scalar positions inside clusters. `text()` and
+`is_empty()` inspect the indexed text; `boundaries()` returns a detached copy.
+
+Construction uses the same Unicode 16 rules as `graphemes`, with input-proportional
+work and storage. Repeated indexed access/slicing is O(1), exact byte-boundary
+lookup is O(log clusters), and no segmentation is repeated during lookup. Slices
+retain the original string storage. This is an immutable snapshot, not an edit
+tracking or streaming segmentation API.
