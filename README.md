@@ -90,4 +90,16 @@ From the repository root:
 (cd ../verification && GOML_BUILD_JOBS=2 just ecosystem-test unicode_text)
 ```
 
-The independent consumer exercises public imports, byte offsets, widths, and checked layouts. The separate native tooling module imports the versioned library and checks all 1,093 official `GraphemeBreakTest`, 1,826 `WordBreakTest`, and 16,672 `LineBreakTest` cases directly. Eleven terminal-width reference samples also run in the consumer’s ordinary GoML tests. Unit tests also cover emoji/variation policies, CJK and ambiguous widths, long combining and flag runs, source ranges, mandatory separators, tabs, overflowing clusters, trim policies, and explicit allocation limits.
+The example exercises public imports, byte offsets, widths, and checked layouts. The separate native tooling module imports the versioned library and checks all 1,093 official `GraphemeBreakTest`, 1,826 `WordBreakTest`, and 16,672 `LineBreakTest` cases directly. Eleven terminal-width reference samples also run in the example’s ordinary GoML tests. Unit tests also cover emoji/variation policies, CJK and ambiguous widths, long combining and flag runs, source ranges, mandatory separators, tabs, overflowing clusters, trim policies, and explicit allocation limits.
+
+## Development and examples
+
+Requires GoML 0.1.55 or newer. The `examples/basic/` example shares the root manifest. From the library root, run:
+
+```sh
+goml run --example basic
+goml test
+goml verify --timeout 300s
+```
+
+`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test unicode_text)` also retains the library-specific smoke and compatibility checks.

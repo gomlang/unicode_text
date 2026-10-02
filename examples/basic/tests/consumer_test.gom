@@ -1,6 +1,6 @@
 package tests;
 
-use consumer::unicode_text as application;
+use ecosystem::unicode_text::examples::basic as application;
 use ecosystem::unicode_text as unicode;
 use std::testing;
 
