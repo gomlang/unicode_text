@@ -7,7 +7,7 @@
 "ecosystem::unicode_text" = "0.1.0"
 ```
 
-```gom
+```goml
 use ecosystem::unicode_text;
 
 fn main() -> () {
@@ -72,7 +72,7 @@ Trimming removes ASCII spaces at line ends and at the start of a continuation. S
 
 ## Data and reproducibility
 
-[Unicode source manifest](data/manifest.json) pins the source URLs and SHA-256 hashes for Unicode 16.0.0 properties and all three official segmentation test suites. Only this manifest, the [Unicode license](data/LICENSE.txt), and generated `properties.gom` are checked in. Raw property files, test corpora and compressed archives are not versioned. Every generator or conformance-checker invocation downloads fresh source bytes from the pinned URLs and checks their SHA-256 hashes; downloads are held in memory for that invocation, with no persistent cache or bundled-data fallback. Ordinary GoML builds and module tests use the generated tables directly and do not need these downloads.
+[Unicode source manifest](data/manifest.json) pins the source URLs and SHA-256 hashes for Unicode 16.0.0 properties and all three official segmentation test suites. Only this manifest, the [Unicode license](data/LICENSE.txt), and generated `properties.goml` are checked in. Raw property files, test corpora and compressed archives are not versioned. Every generator or conformance-checker invocation downloads fresh source bytes from the pinned URLs and checks their SHA-256 hashes; downloads are held in memory for that invocation, with no persistent cache or bundled-data fallback. Ordinary GoML builds and module tests use the generated tables directly and do not need these downloads.
 
 ```sh
 (cd ../verification && just ecosystem-test unicode_text)
@@ -94,7 +94,7 @@ The example exercises public imports, byte offsets, widths, and checked layouts.
 
 ## Development and examples
 
-Requires GoML 0.1.55 or newer. The `examples/basic/` example shares the root manifest. From the library root, run:
+Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest. From the library root, run:
 
 ```sh
 goml run --example basic

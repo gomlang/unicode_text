@@ -408,7 +408,7 @@ fn conformance(data: Data, name: string, kind: string, expected_count: isize) ->
 pub fn verify(root: string) -> Result[(), string] {
     let data = download(root)?;
     let generated = generate(data)?;
-    let existing = fs::read_file_structured(root + "/properties.gom").map_err(
+    let existing = fs::read_file_structured(root + "/properties.goml").map_err(
         |error| error.to_string(),
     )?;
     if generated != existing {
@@ -436,7 +436,7 @@ fn run() -> Result[(), string] {
         verify(root)
     } else if command == "generate" {
         let generated = generate(download(root)?)?;
-        fs::write_file_structured(root + "/properties.gom", generated).map_err(
+        fs::write_file_structured(root + "/properties.goml", generated).map_err(
             |error| error.to_string(),
         )
     } else {
