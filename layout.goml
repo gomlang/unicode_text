@@ -112,14 +112,16 @@ pub fn pad(
     if columns < 0 {
         return Result::Err(Error::InvalidOptions("columns must be nonnegative"));
     }
+    if value.byte_len() > limits.max_output_bytes {
+        return Result::Err(Error::OutputLimit);
+    }
     let occupied = width_with(value, options);
     let missing = if columns > occupied {
         columns - occupied
     } else {
         0
     };
-    if value.byte_len() > limits.max_output_bytes
-        || missing > limits.max_output_bytes - value.byte_len() {
+    if missing > limits.max_output_bytes - value.byte_len() {
         return Result::Err(Error::OutputLimit);
     }
     let left = match alignment {
@@ -145,6 +147,9 @@ pub fn expand_tabs(value: string, tab_stop: isize, options: WidthOptions, limits
     limits.input(value)?;
     if tab_stop < 1 || tab_stop > 1048576 {
         return Result::Err(Error::InvalidOptions("tab_stop must be between 1 and 1048576"));
+    }
+    if value.byte_len() > limits.max_output_bytes {
+        return Result::Err(Error::OutputLimit);
     }
     let builder = text::StringBuilder::new();
     let mut bytes = 0;

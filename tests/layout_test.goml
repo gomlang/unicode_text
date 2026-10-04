@@ -150,6 +150,74 @@ fn tabs_use_display_columns_and_reset_at_hard_breaks() -> () {
 }
 
 #[test]
+fn preserving_layout_checks_bytes_and_keeps_validation_order() -> () {
+    let width = unicode::WidthOptions::new();
+    let limits = unicode::LayoutLimits { max_output_bytes: 1, ..unicode::LayoutLimits::new() };
+    let mark = "\u0301";
+    let alignment = unicode::Alignment::Left;
+    testing::assert_eq(
+        testing::expect_err(unicode::pad(mark, 0, alignment, width, limits), "zero-width bytes").to_string(),
+        "Unicode text output byte limit exceeded",
+    );
+    testing::assert_eq(
+        testing::expect_err(unicode::expand_tabs(mark, 1, width, limits), "zero-width bytes").to_string(),
+        "Unicode text output byte limit exceeded",
+    );
+    testing::assert_eq(
+        testing::expect_ok(
+            unicode::pad(
+                mark,
+                0,
+                alignment,
+                width,
+                unicode::LayoutLimits { max_output_bytes: 2, ..limits },
+            ),
+            "exact padding limit",
+        ),
+        mark,
+    );
+    testing::assert_eq(
+        testing::expect_ok(
+            unicode::expand_tabs(
+                "\t\u0301",
+                1,
+                width,
+                unicode::LayoutLimits { max_output_bytes: 3, ..limits },
+            ),
+            "exact tab limit",
+        ),
+        " \u0301",
+    );
+    for (options, pad_error, tabs_error) in Vec::from_array(
+        [
+            (
+                unicode::LayoutLimits { max_input_bytes: -1, ..limits },
+                "layout limits must be nonnegative and max_lines positive",
+                "layout limits must be nonnegative and max_lines positive",
+            ),
+            (
+                unicode::LayoutLimits { max_input_bytes: 1, ..limits },
+                "Unicode text input byte limit exceeded",
+                "Unicode text input byte limit exceeded",
+            ),
+            (limits, "columns must be nonnegative", "tab_stop must be between 1 and 1048576"),
+        ],
+    ) {
+        testing::assert_eq(
+            testing::expect_err(
+                unicode::pad(mark, -1, alignment, width, options),
+                "padding validation",
+            ).to_string(),
+            pad_error,
+        );
+        testing::assert_eq(
+            testing::expect_err(unicode::expand_tabs(mark, 0, width, options), "tab validation").to_string(),
+            tabs_error,
+        );
+    }
+}
+
+#[test]
 fn wrapping_prefers_words_preserves_clusters_and_hard_lines() -> () {
     testing::assert(unicode::wrap("hello world", 5) == Vec::from_array(["hello", "world"]));
     testing::assert(unicode::wrap("a\r\n\n界界\n", 3) == Vec::from_array(["a", "", "界", "界", ""]));
