@@ -60,14 +60,27 @@ fn cluster_width(items: Vec[Scalar], start: isize, end: isize, options: WidthOpt
     }
 }
 
-pub fn width_with(value: string, options: WidthOptions) -> isize {
-    let items = scalars(value);
+fn scalar_width(items: Vec[Scalar], options: WidthOptions) -> isize {
     let starts = grapheme_starts(items);
     let mut result = 0;
     for index in 1..starts.len() {
         result += cluster_width(items, starts[index - 1], starts[index], options);
     }
     result
+}
+
+fn joined_width(left: string, right: string, options: WidthOptions) -> isize {
+    let items = scalars(left);
+    for item in scalars(right) {
+        items.push(
+            Scalar { start: left.byte_len() + item.start, end: left.byte_len() + item.end, ..item },
+        );
+    }
+    scalar_width(items, options)
+}
+
+pub fn width_with(value: string, options: WidthOptions) -> isize {
+    scalar_width(scalars(value), options)
 }
 
 pub fn width(value: string) -> isize {

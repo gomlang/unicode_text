@@ -83,6 +83,53 @@ fn ellipsis_and_alignment_respect_width_and_output_limits() -> () {
 }
 
 #[test]
+fn ellipsis_measures_graphemes_formed_at_the_marker_boundary() -> () {
+    let width = unicode::WidthOptions::new();
+    let limits = unicode::LayoutLimits::new();
+    for (value, columns, marker, expected) in Vec::from_array(
+        [
+            ("©x", 1, "\ufe0f", "\ufe0f"),
+            ("©©x", 2, "\ufe0f", "©\ufe0f"),
+            ("11x", 2, "\u20e3", "1\u20e3"),
+            ("e\u0301©x", 2, "\ufe0f", "e\u0301\ufe0f"),
+        ],
+    ) {
+        let result = testing::expect_ok(
+            unicode::ellipsize(value, columns, marker, width, limits),
+            "marker joining the prefix",
+        );
+        testing::assert_eq(result, expected);
+        testing::assert(unicode::width_with(result, width) <= columns);
+    }
+    testing::assert_eq(
+        testing::expect_ok(
+            unicode::ellipsize(
+                "©x",
+                1,
+                "\ufe0f",
+                width,
+                unicode::LayoutLimits { max_output_bytes: 3, ..limits },
+            ),
+            "trimmed byte limit",
+        ),
+        "\ufe0f",
+    );
+    testing::assert_eq(
+        testing::expect_ok(
+            unicode::ellipsize(
+                "©x",
+                1,
+                "\ufe0f",
+                unicode::WidthOptions { emoji_wide: false, ..width },
+                limits,
+            ),
+            "narrow emoji",
+        ),
+        "©\ufe0f",
+    );
+}
+
+#[test]
 fn tabs_use_display_columns_and_reset_at_hard_breaks() -> () {
     let width = unicode::WidthOptions::new();
     let limits = unicode::LayoutLimits::new();

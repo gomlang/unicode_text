@@ -62,7 +62,7 @@ Emoji-presentation clusters, VS16 emoji, keycaps, flags, and pictographic ZWJ se
 | `wrap(text, columns)` / `wrap_with(text, columns, width)` | Convenience wrapping with default trim and emergency-break behavior |
 | `wrap_configured(text, WrapOptions)` | Checked wrapping returning `Vec[WrappedLine]` with text, source byte range, measured width, and `hard_break` |
 
-Zero-width prefixes fit a zero-column truncation budget. Ellipsis markers are themselves truncated at grapheme boundaries if necessary; if no marker grapheme fits, the result uses the available budget for the original prefix. Padding never truncates; centered padding puts an odd extra space on the right.
+Zero-width prefixes fit a zero-column truncation budget. Ellipsis markers are themselves truncated at grapheme boundaries if necessary; if no marker grapheme fits, the result uses the available budget for the original prefix. The joined prefix and marker are measured together: a variation selector or keycap marker that widens the preceding grapheme causes the prefix to shrink at its original grapheme boundaries. Padding never truncates; centered padding puts an odd extra space on the right.
 
 `WrapOptions::new(columns)` exposes `columns`, `width`, `trim_spaces: true`, `break_long_words: true`, and `limits`. Wrapping prefers Unicode line-break opportunities, intersects them with grapheme boundaries, removes hard separators, and preserves empty hard-separated lines, including a final empty line. `hard_break` distinguishes a physical separator from a soft wrap or end-of-input. The last emitted line before a separator retains `hard_break: true` even when an oversized grapheme forces an emergency break and all remaining spaces are trimmed.
 

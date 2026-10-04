@@ -88,7 +88,12 @@ pub fn ellipsize(
         return truncate_checked(value, columns, options, limits);
     }
     let suffix = truncate_with(marker, columns, options);
-    let prefix = truncate_with(value, columns - width_with(suffix, options), options);
+    let mut available = columns - width_with(suffix, options);
+    let mut prefix = truncate_with(value, available, options);
+    while joined_width(prefix, suffix, options) > columns {
+        available -= 1;
+        prefix = truncate_with(value, available, options);
+    }
     if suffix.byte_len() > limits.max_output_bytes
         || prefix.byte_len() > limits.max_output_bytes - suffix.byte_len() {
         return Result::Err(Error::OutputLimit);
