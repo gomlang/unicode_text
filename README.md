@@ -4,7 +4,7 @@
 
 ```toml
 [dependencies]
-"ecosystem::unicode_text" = "0.1.0"
+"ecosystem::unicode_text" = true
 ```
 
 ```goml
@@ -78,7 +78,7 @@ Trimming removes ASCII spaces at line ends and at the start of a continuation. S
 (cd ../verification && just ecosystem-test unicode_text)
 ```
 
-The separate native GoML module in `tools/` downloads the sources and runs both exact table verification and official conformance as an ordinary `#[test]`. Its `unicode_data` executable also accepts `check` or `generate` followed by the Unicode module directory. With the local registry configured, build it from `tools` using `../../../goml-dev/stage2/bin/goml build`, then run `_artifact/bin/unicode_data generate ..` to rewrite the table.
+The separate native GoML module in `tools/` downloads the sources and runs both exact table verification and official conformance as an ordinary `#[test]`. Its `unicode_data` executable also accepts `check` or `generate` followed by the Unicode module directory. With the local registry configured, build it from `tools` using `goml build`, then run `_artifact/bin/unicode_data generate ..` to rewrite the table.
 
 Every `check`, `generate`, or native conformance-test invocation downloads fresh data again. Download failures, a response above 16 MiB, or checksum mismatches stop verification; they never fall back to old files. Downloads are held in memory and never written to the repository. Injected-fetch native tests also check fresh requests on every invocation, both no-cache headers, checksum and transport failures without reuse, oversized bodies and invalid UTF-8. The conformance step therefore requires network access to unicode.org. The generated table consists of sorted, nonoverlapping intervals encoded in one immutable string and searched with binary search. Segmentation tracks preceding/following significant classes and regional-indicator counts rather than repeatedly scanning long runs. Runtime work is linear in input length with logarithmic property lookup and input-proportional temporary storage.
 
@@ -90,19 +90,19 @@ From the repository root:
 (cd ../verification && GOML_BUILD_JOBS=2 just ecosystem-test unicode_text)
 ```
 
-The example exercises public imports, byte offsets, widths, and checked layouts. The separate native tooling module imports the versioned library and checks all 1,093 official `GraphemeBreakTest`, 1,826 `WordBreakTest`, and 16,672 `LineBreakTest` cases directly. Eleven terminal-width reference samples also run in the example’s ordinary GoML tests. Unit tests also cover emoji/variation policies, CJK and ambiguous widths, long combining and flag runs, source ranges, mandatory separators, tabs, overflowing clusters, trim policies, and explicit allocation limits.
+The example exercises public imports, byte offsets, widths, and checked layouts. The separate native tooling module imports the library from the isolated registry and checks all 1,093 official `GraphemeBreakTest`, 1,826 `WordBreakTest`, and 16,672 `LineBreakTest` cases directly. Eleven terminal-width reference samples also run in the example’s ordinary GoML tests. Unit tests also cover emoji/variation policies, CJK and ambiguous widths, long combining and flag runs, source ranges, mandatory separators, tabs, overflowing clusters, trim policies, and explicit allocation limits.
 
 ## Development and examples
 
-Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest. From the library root, run:
+Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test
-goml verify --timeout 300s
+(cd ../verification && just ecosystem-test unicode_text)
 ```
 
-`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test unicode_text)` also retains the library-specific smoke and compatibility checks.
+`goml test` builds the example and runs its tests. The ecosystem verifier uses an isolated registry snapshot and runs the library-specific smoke and compatibility checks.
 
 ## Reusable grapheme positions
 
