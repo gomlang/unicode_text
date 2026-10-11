@@ -75,7 +75,7 @@ Trimming removes ASCII spaces at line ends and at the start of a continuation. S
 [Unicode source manifest](data/manifest.json) pins the source URLs and SHA-256 hashes for Unicode 16.0.0 properties and all three official segmentation test suites. Only this manifest, the [Unicode license](data/LICENSE.txt), and generated `properties.goml` are checked in. Raw property files, test corpora and compressed archives are not versioned. Every generator or conformance-checker invocation downloads fresh source bytes from the pinned URLs and checks their SHA-256 hashes; downloads are held in memory for that invocation, with no persistent cache or bundled-data fallback. Ordinary GoML builds and module tests use the generated tables directly and do not need these downloads.
 
 ```sh
-(cd ../verification && just ecosystem-test unicode_text)
+(cd ../workflows && just ecosystem-test unicode_text)
 ```
 
 The separate native GoML module in `tools/` downloads the sources and runs both exact table verification and official conformance as an ordinary `#[test]`. Its `unicode_data` executable also accepts `check` or `generate` followed by the Unicode module directory. With the local registry configured, build it from `tools` using `goml build`, then run `_artifact/bin/unicode_data generate ..` to rewrite the table.
@@ -87,19 +87,19 @@ Every `check`, `generate`, or native conformance-test invocation downloads fresh
 From the repository root:
 
 ```sh
-(cd ../verification && GOML_BUILD_JOBS=2 just ecosystem-test unicode_text)
+(cd ../workflows && GOML_BUILD_JOBS=2 just ecosystem-test unicode_text)
 ```
 
 The example exercises public imports, byte offsets, widths, and checked layouts. The separate native tooling module imports the library from the isolated registry and checks all 1,093 official `GraphemeBreakTest`, 1,826 `WordBreakTest`, and 16,672 `LineBreakTest` cases directly. Eleven terminal-width reference samples also run in the example’s ordinary GoML tests. Unit tests also cover emoji/variation policies, CJK and ambiguous widths, long combining and flag runs, source ranges, mandatory separators, tabs, overflowing clusters, trim policies, and explicit allocation limits.
 
 ## Development and examples
 
-Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest. From the library root, run:
+Requires a current GoML toolchain supporting unversioned registry dependencies; see [the pinned ecosystem toolchain](https://github.com/gomlang/workflows/blob/main/ci/toolchain.json). The `examples/basic/` example shares the root manifest. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test
-(cd ../verification && just ecosystem-test unicode_text)
+(cd ../workflows && just ecosystem-test unicode_text)
 ```
 
 `goml test` builds the example and runs its tests. The ecosystem verifier uses an isolated registry snapshot and runs the library-specific smoke and compatibility checks.
